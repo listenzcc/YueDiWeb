@@ -1,0 +1,17 @@
+/opt/oss-server/
+├── package.json
+├── server.js          # 主服务器文件
+├── config/
+│   └── config.js     # 配置文件
+├── routes/
+│   ├── auth.js       # 认证路由
+│   └── oss.js        # OSS 路由
+├── middleware/
+│   └── auth.js       # 认证中间件
+├── controllers/
+│   ├── userController.js
+│   └── ossController.js
+├── models/
+│   └── User.js       # 用户模型
+└── public/
+    └── index.html    # 前端页面
