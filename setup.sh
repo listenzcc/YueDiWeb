@@ -16,7 +16,7 @@ cd /opt/oss-server
 # systemctl enable mongod
 
 # 安装 Node.js
-curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+# curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 # apt-get install -y nodejs
 
 # 安装项目依赖
