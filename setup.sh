@@ -7,17 +7,17 @@ mkdir -p /opt/oss-server
 cd /opt/oss-server
 
 # 安装 MongoDB
-echo "安装 MongoDB..."
-wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
-apt-get update
-apt-get install -y mongodb-org
-systemctl start mongod
-systemctl enable mongod
+# echo "安装 MongoDB..."
+# wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
+# echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+# apt-get update
+# apt-get install -y mongodb-org
+# systemctl start mongod
+# systemctl enable mongod
 
 # 安装 Node.js
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-apt-get install -y nodejs
+# apt-get install -y nodejs
 
 # 安装项目依赖
 npm install
@@ -62,7 +62,7 @@ systemctl enable oss-server
 systemctl start oss-server
 
 # 设置 Nginx 反向代理（可选）
-apt-get install -y nginx
+# apt-get install -y nginx
 cat > /etc/nginx/sites-available/oss-server << EOF
 server {
     listen 80;
