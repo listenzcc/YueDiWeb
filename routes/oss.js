@@ -1,5 +1,12 @@
-const express = require('express');
-const STS = require('@alicloud/sts-sdk');
+// const express = require('express');
+// const STS = require('@alicloud/sts-sdk');
+// const OSS = require('ali-oss');
+// const config = require('../config/config');
+// const { authMiddleware } = require('../middleware/auth');
+// const User = require('../models/User');
+
+// const router = express.Router();
+
 const OSS = require('ali-oss');
 const config = require('../config/config');
 const { authMiddleware } = require('../middleware/auth');
@@ -35,7 +42,15 @@ router.get('/sts-token', authMiddleware, async (req, res) => {
             });
         }
 
-        // 生成上传策略
+        // 使用 ali-oss 包内置的 STS 功能
+        const stsClient = new OSS({
+            region: config.aliyun.region,
+            accessKeyId: config.aliyun.accessKeyId,
+            accessKeySecret: config.aliyun.accessKeySecret,
+            bucket: config.aliyun.bucket
+        });
+
+        // 定义上传策略
         const policy = {
             "Version": "1",
             "Statement": [
@@ -44,46 +59,106 @@ router.get('/sts-token', authMiddleware, async (req, res) => {
                     "Action": [
                         "oss:PutObject",
                         "oss:GetObject",
+                        "oss:DeleteObject",
                         "oss:ListObjects"
                     ],
                     "Resource": [
                         `acs:oss:*:*:${config.aliyun.bucket}/users/${user._id}/*`,
                         `acs:oss:*:*:${config.aliyun.bucket}/users/${user._id}`
-                    ],
-                    "Condition": {
-                        "NumericLessThanEquals": {
-                            "oss:ContentLength": config.upload.maxFileSize
-                        }
-                    }
+                    ]
                 }
             ]
         };
 
-        // 获取 STS Token
-        const result = await sts.assumeRole(
+        // 获取临时凭证
+        const credentials = await stsClient.assumeRole(
             config.aliyun.roleArn,
             policy,
             3600, // 1小时有效期
-            `user-${user._id}`
+            `user-${user._id}-${Date.now()}`
         );
 
-        const credentials = result.Credentials;
-
         res.json({
-            accessKeyId: credentials.AccessKeyId,
-            accessKeySecret: credentials.AccessKeySecret,
-            stsToken: credentials.SecurityToken,
-            expiration: credentials.Expiration,
+            accessKeyId: credentials.credentials.AccessKeyId,
+            accessKeySecret: credentials.credentials.AccessKeySecret,
+            stsToken: credentials.credentials.SecurityToken,
+            expiration: credentials.credentials.Expiration,
             bucket: config.aliyun.bucket,
             region: config.aliyun.region,
             endpoint: config.aliyun.endpoint,
             userPath: `users/${user._id}/`
         });
+
     } catch (error) {
         console.error('获取STS Token失败:', error);
-        res.status(500).json({ error: '获取上传凭证失败' });
+        res.status(500).json({
+            error: '获取上传凭证失败',
+            details: error.message
+        });
     }
 });
+
+// 获取 STS 临时凭证
+// router.get('/sts-token', authMiddleware, async (req, res) => {
+//     try {
+//         const user = req.user;
+
+//         // 检查用户存储空间
+//         if (user.usedStorage >= user.storageQuota) {
+//             return res.status(403).json({
+//                 error: '存储空间不足，请清理文件或联系管理员'
+//             });
+//         }
+
+//         // 生成上传策略
+//         const policy = {
+//             "Version": "1",
+//             "Statement": [
+//                 {
+//                     "Effect": "Allow",
+//                     "Action": [
+//                         "oss:PutObject",
+//                         "oss:GetObject",
+//                         "oss:ListObjects"
+//                     ],
+//                     "Resource": [
+//                         `acs:oss:*:*:${config.aliyun.bucket}/users/${user._id}/*`,
+//                         `acs:oss:*:*:${config.aliyun.bucket}/users/${user._id}`
+//                     ],
+//                     "Condition": {
+//                         "NumericLessThanEquals": {
+//                             "oss:ContentLength": config.upload.maxFileSize
+//                         }
+//                     }
+//                 }
+//             ]
+//         };
+
+//         // 获取 STS Token
+//         const result = await sts.assumeRole(
+//             config.aliyun.roleArn,
+//             policy,
+//             3600, // 1小时有效期
+//             `user-${user._id}`
+//         );
+
+//         const credentials = result.Credentials;
+
+//         res.json({
+//             accessKeyId: credentials.AccessKeyId,
+//             accessKeySecret: credentials.AccessKeySecret,
+//             stsToken: credentials.SecurityToken,
+//             expiration: credentials.Expiration,
+//             bucket: config.aliyun.bucket,
+//             region: config.aliyun.region,
+//             endpoint: config.aliyun.endpoint,
+//             userPath: `users/${user._id}/`
+//         });
+//     } catch (error) {
+//         console.error('获取STS Token失败:', error);
+//         res.status(500).json({ error: '获取上传凭证失败' });
+//     }
+// });
 
 // 获取上传列表
 router.get('/files', authMiddleware, async (req, res) => {

@@ -9,13 +9,22 @@ module.exports = {
     },
 
     // 阿里云配置
+    // aliyun: {
+    //     accessKeyId: process.env.ALIYUN_ACCESS_KEY_ID,
+    //     accessKeySecret: process.env.ALIYUN_ACCESS_KEY_SECRET,
+    //     region: process.env.OSS_REGION || 'oss-cn-hangzhou',
+    //     bucket: process.env.OSS_BUCKET,
+    //     roleArn: process.env.ALIYUN_ROLE_ARN,
+    //     endpoint: `oss-${process.env.OSS_REGION || 'cn-hangzhou'}.aliyuncs.com`
+    // },
+    // 阿里云配置
     aliyun: {
         accessKeyId: process.env.ALIYUN_ACCESS_KEY_ID,
         accessKeySecret: process.env.ALIYUN_ACCESS_KEY_SECRET,
         region: process.env.OSS_REGION || 'oss-cn-hangzhou',
         bucket: process.env.OSS_BUCKET,
         roleArn: process.env.ALIYUN_ROLE_ARN,
-        endpoint: `oss-${process.env.OSS_REGION || 'cn-hangzhou'}.aliyuncs.com`
+        endpoint: process.env.OSS_ENDPOINT || `oss-${process.env.OSS_REGION || 'cn-hangzhou'}.aliyuncs.com`
     },
 
     // 数据库配置

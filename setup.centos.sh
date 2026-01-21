@@ -57,6 +57,14 @@ else
     echo "警告：firewalld 未安装，跳过防火墙配置"
 fi
 
+if command -v ufw &> /dev/null; then
+    echo "配置 UFW 防火墙..."
+    ufw allow 3000
+    ufw allow 80
+    ufw allow 22
+    ufw --force enable
+fi
+
 # 创建 systemd 服务
 echo "创建 systemd 服务..."
 cat > /etc/systemd/system/oss-server.service << EOF
