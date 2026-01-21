@@ -1,5 +1,5 @@
-// const express = require('express');
-// const STS = require('@alicloud/sts-sdk');
+const express = require('express');
+const STS = require('@alicloud/sts-sdk');
 // const OSS = require('ali-oss');
 // const config = require('../config/config');
 // const { authMiddleware } = require('../middleware/auth');
@@ -15,10 +15,11 @@ const User = require('../models/User');
 const router = express.Router();
 
 // 初始化 STS 客户端
-const sts = new STS({
-    accessKeyId: config.aliyun.accessKeyId,
-    accessKeySecret: config.aliyun.accessKeySecret
-});
+// ! It is incorrect to initialize STS like this with ali-oss package
+// const sts = new STS({
+//     accessKeyId: config.aliyun.accessKeyId,
+//     accessKeySecret: config.aliyun.accessKeySecret
+// });
 
 // 生成用户特定的上传路径
 function getUserUploadPath(userId, filename) {
