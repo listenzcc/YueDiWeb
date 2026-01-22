@@ -9,7 +9,9 @@ const config = require('./config/config');
 const app = express();
 
 // 安全中间件
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: false // 根据需要调整 CSP 设置
+}));
 app.use(cors({
     origin: process.env.CLIENT_URL || '*',
     credentials: true
