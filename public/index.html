@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSS 文件上传管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        nav {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        nav button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            border: none;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        nav button:hover {
+            background: #5a67d8;
+        }
+
+        .content {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5a67d8;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .upload-area {
+            border: 3px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            transition: border-color 0.3s;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .progress-container {
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s;
+            width: 0%;
+        }
+
+        .file-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-actions button {
+            margin-left: 10px;
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 6px;
+        }
+
+        .storage-info {
+            flex: 1;
+        }
+
+        .storage-bar {
+            height: 10px;
+            background: #dee2e6;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .storage-used {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- 原有的 HTML 结构，但移除所有 onclick、onchange 等属性 -->
+        <!-- 改为使用 ID，例如： -->
+        <nav>
+            <button id="authBtn">登录/注册</button>
+            <button id="uploadBtn" class="hidden">上传文件</button>
+            <button id="filesBtn" class="hidden">文件管理</button>
+            <button id="profileBtn" class="hidden">个人中心</button>
+            <button id="logoutBtn" class="hidden" style="background: #e53e3e;">退出登录</button>
+        </nav>
+
+        <!-- 表单部分 -->
+        <div id="authSection" class="card">
+            <button id="loginBtn">登录</button>
+            <button id="showRegisterBtn">注册新账户</button>
+
+            <div id="registerForm" class="hidden">
+                <button id="registerBtn">注册</button>
+                <button id="showLoginBtn">返回登录</button>
+            </div>
+        </div>
+
+        <!-- 文件上传部分 -->
+        <div id="uploadSection" class="card hidden">
+            <div class="upload-area" id="dropArea">
+                <input type="file" id="fileInput" multiple style="display: none;">
+                <button id="chooseFileBtn">选择文件</button>
+            </div>
+        </div>
+
+        <!-- 其他部分类似修改... -->
+    </div>
+
+    <!-- 外部 JavaScript 文件 -->
+    <script src="/js/aliyun-oss-sdk.min.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+
+</html>
