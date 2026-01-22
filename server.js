@@ -45,6 +45,25 @@ app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// 静态文件路由（放在路由前面）
+app.use('/js', express.static(path.join(__dirname, 'public/js'), {
+    maxAge: '1y', // 长期缓存
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+        }
+    }
+}));
+
+app.use('/css', express.static(path.join(__dirname, 'public/css')));
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
+
+// 默认静态文件路由（放在最后）
+app.use(express.static(path.join(__dirname, 'public'), {
+    index: false, // 不自动提供 index.html
+    extensions: ['html', 'htm']
+}));
+
 // 默认路由
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
