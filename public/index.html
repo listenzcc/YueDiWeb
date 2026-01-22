@@ -237,41 +237,667 @@
 
 <body>
     <div class="container">
-        <!-- 原有的 HTML 结构，但移除所有 onclick、onchange 等属性 -->
-        <!-- 改为使用 ID，例如： -->
+        <header>
+            <h1>📁 OSS 文件上传管理系统</h1>
+            <p>安全高效的大文件上传解决方案</p>
+        </header>
+
         <nav>
-            <button id="authBtn">登录/注册</button>
-            <button id="uploadBtn" class="hidden">上传文件</button>
-            <button id="filesBtn" class="hidden">文件管理</button>
-            <button id="profileBtn" class="hidden">个人中心</button>
-            <button id="logoutBtn" class="hidden" style="background: #e53e3e;">退出登录</button>
+            <button onclick="showSection('auth')">登录/注册</button>
+            <button onclick="showSection('upload')" id="uploadBtn" class="hidden">上传文件</button>
+            <button onclick="showSection('files')" id="filesBtn" class="hidden">文件管理</button>
+            <button onclick="showSection('profile')" id="profileBtn" class="hidden">个人中心</button>
+            <button onclick="logout()" id="logoutBtn" class="hidden" style="background: #e53e3e;">退出登录</button>
         </nav>
 
-        <!-- 表单部分 -->
-        <div id="authSection" class="card">
-            <button id="loginBtn">登录</button>
-            <button id="showRegisterBtn">注册新账户</button>
+        <div class="content">
+            <!-- 认证区域 -->
+            <div id="authSection" class="card">
+                <h2 style="margin-bottom: 20px;">用户登录 / 注册</h2>
+                <div id="authMessage" class="message hidden"></div>
 
-            <div id="registerForm" class="hidden">
-                <button id="registerBtn">注册</button>
-                <button id="showLoginBtn">返回登录</button>
+                <div id="loginForm">
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <input type="email" id="loginEmail" placeholder="输入邮箱">
+                    </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input type="password" id="loginPassword" placeholder="输入密码">
+                    </div>
+                    <button onclick="login()">登录</button>
+                    <button onclick="showRegister()" style="background: #48bb78; margin-left: 10px;">注册新账户</button>
+                </div>
+
+                <div id="registerForm" class="hidden">
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" id="regUsername" placeholder="输入用户名">
+                    </div>
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <input type="email" id="regEmail" placeholder="输入邮箱">
+                    </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input type="password" id="regPassword" placeholder="至少6位密码">
+                    </div>
+                    <div class="form-group">
+                        <label>确认密码</label>
+                        <input type="password" id="regConfirmPassword" placeholder="再次输入密码">
+                    </div>
+                    <button onclick="register()">注册</button>
+                    <button onclick="showLogin()" style="background: #718096; margin-left: 10px;">返回登录</button>
+                </div>
+            </div>
+
+            <!-- 上传区域 -->
+            <div id="uploadSection" class="card hidden">
+                <h2 style="margin-bottom: 20px;">上传文件</h2>
+                <div id="uploadMessage" class="message hidden"></div>
+
+                <div class="user-info">
+                    <div>
+                        <strong>欢迎，<span id="currentUser">用户</span></strong>
+                        <div id="storageStatus">存储空间：0GB / 10GB</div>
+                    </div>
+                    <div class="storage-info">
+                        <div class="storage-bar">
+                            <div class="storage-used" id="storageBar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-area" id="dropArea" ondragover="handleDragOver(event)"
+                    ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                    <div style="font-size: 48px; margin-bottom: 20px;">📤</div>
+                    <h3>拖拽文件到此处上传</h3>
+                    <p style="color: #6c757d; margin: 10px 0;">支持单个或多个文件，最大 10GB</p>
+                    <input type="file" id="fileInput" multiple style="display: none;"
+                        onchange="handleFileSelect(event)">
+                    <button onclick="document.getElementById('fileInput').click()">选择文件</button>
+                </div>
+
+                <div class="progress-container" id="progressContainer" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div id="progressText">准备上传...</div>
+                </div>
+
+                <div id="fileList" class="file-list"></div>
+            </div>
+
+            <!-- 文件管理区域 -->
+            <div id="filesSection" class="card hidden">
+                <h2 style="margin-bottom: 20px;">文件管理</h2>
+                <div id="filesMessage" class="message hidden"></div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <input type="text" id="searchInput" placeholder="搜索文件名..." style="flex: 1;">
+                    <button onclick="searchFiles()">搜索</button>
+                    <button onclick="refreshFiles()">刷新</button>
+                </div>
+
+                <div id="filesContainer">
+                    加载中...
+                </div>
+            </div>
+
+            <!-- 个人中心区域 -->
+            <div id="profileSection" class="card hidden">
+                <h2 style="margin-bottom: 20px;">个人中心</h2>
+                <div id="profileMessage" class="message hidden"></div>
+
+                <div class="user-info" style="margin-bottom: 30px;">
+                    <div>
+                        <strong id="profileUsername">用户名</strong>
+                        <div id="profileEmail">邮箱：加载中...</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 15px;">修改密码</h3>
+                <div class="form-group">
+                    <label>当前密码</label>
+                    <input type="password" id="currentPassword" placeholder="输入当前密码">
+                </div>
+                <div class="form-group">
+                    <label>新密码</label>
+                    <input type="password" id="newPassword" placeholder="输入新密码（至少6位）">
+                </div>
+                <div class="form-group">
+                    <label>确认新密码</label>
+                    <input type="password" id="confirmNewPassword" placeholder="再次输入新密码">
+                </div>
+                <button onclick="changePassword()">修改密码</button>
             </div>
         </div>
-
-        <!-- 文件上传部分 -->
-        <div id="uploadSection" class="card hidden">
-            <div class="upload-area" id="dropArea">
-                <input type="file" id="fileInput" multiple style="display: none;">
-                <button id="chooseFileBtn">选择文件</button>
-            </div>
-        </div>
-
-        <!-- 其他部分类似修改... -->
     </div>
 
-    <!-- 外部 JavaScript 文件 -->
+    <!-- Download the script to the local -->
+    <!-- <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.17.1.min.js"></script> -->
     <script src="/js/aliyun-oss-sdk-6.17.1.min.js"></script>
-    <script src="/js/app.js"></script>
+    <script>
+        let currentUser = null;
+        let stsCredentials = null;
+        let ossClient = null;
+
+        // 显示/隐藏区域
+        function showSection(section) {
+            document.querySelectorAll('.card').forEach(el => el.classList.add('hidden'));
+            document.getElementById(section + 'Section').classList.remove('hidden');
+        }
+
+        // 显示注册表单
+        function showRegister() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+            document.getElementById('authMessage').classList.add('hidden');
+        }
+
+        // 显示登录表单
+        function showLogin() {
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('authMessage').classList.add('hidden');
+        }
+
+        // 显示消息
+        function showMessage(elementId, message, type = 'success') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `message ${type}`;
+            element.classList.remove('hidden');
+
+            if (type === 'success') {
+                setTimeout(() => element.classList.add('hidden'), 3000);
+            }
+        }
+
+        // 登录
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                showMessage('authMessage', '请输入邮箱和密码', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '登录失败');
+                }
+
+                currentUser = data.user;
+                localStorage.setItem('token', data.token);
+
+                showMessage('authMessage', '登录成功！', 'success');
+
+                // 更新界面
+                updateUserInterface();
+                showSection('upload');
+
+                // 获取存储信息
+                updateStorageInfo();
+            } catch (error) {
+                showMessage('authMessage', error.message, 'error');
+            }
+        }
+
+        // 注册
+        async function register() {
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+            if (!username || !email || !password) {
+                showMessage('authMessage', '请填写所有字段', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showMessage('authMessage', '两次密码输入不一致', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '注册失败');
+                }
+
+                showMessage('authMessage', '注册成功！请登录', 'success');
+                showLogin();
+            } catch (error) {
+                showMessage('authMessage', error.message, 'error');
+            }
+        }
+
+        // 更新用户界面
+        function updateUserInterface() {
+            const token = localStorage.getItem('token');
+
+            if (token && currentUser) {
+                document.getElementById('currentUser').textContent = currentUser.username;
+                document.getElementById('profileUsername').textContent = currentUser.username;
+                document.getElementById('profileEmail').textContent = `邮箱：${currentUser.email}`;
+
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('uploadBtn').classList.remove('hidden');
+                document.getElementById('filesBtn').classList.remove('hidden');
+                document.getElementById('profileBtn').classList.remove('hidden');
+                document.getElementById('logoutBtn').classList.remove('hidden');
+            }
+        }
+
+        // 更新存储信息
+        async function updateStorageInfo() {
+            if (!currentUser) return;
+
+            const usedGB = (currentUser.usedStorage / 1024 / 1024 / 1024).toFixed(2);
+            const totalGB = (currentUser.storageQuota / 1024 / 1024 / 1024).toFixed(0);
+            const percentage = (currentUser.usedStorage / currentUser.storageQuota * 100).toFixed(1);
+
+            document.getElementById('storageStatus').textContent =
+                `存储空间：${usedGB}GB / ${totalGB}GB`;
+            document.getElementById('storageBar').style.width = `${percentage}%`;
+        }
+
+        // 获取 STS Token
+        async function getSTSToken() {
+            const token = localStorage.getItem('token');
+
+            try {
+                const response = await fetch('/api/oss/sts-token', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '获取上传凭证失败');
+                }
+
+                stsCredentials = data;
+                return data;
+            } catch (error) {
+                showMessage('uploadMessage', error.message, 'error');
+                throw error;
+            }
+        }
+
+        // 初始化 OSS 客户端
+        async function initOSSClient() {
+            if (!stsCredentials) {
+                await getSTSToken();
+            }
+
+            ossClient = new OSS({
+                region: stsCredentials.region,
+                accessKeyId: stsCredentials.accessKeyId,
+                accessKeySecret: stsCredentials.accessKeySecret,
+                stsToken: stsCredentials.stsToken,
+                bucket: stsCredentials.bucket,
+                refreshSTSToken: async () => {
+                    const newToken = await getSTSToken();
+                    return {
+                        accessKeyId: newToken.accessKeyId,
+                        accessKeySecret: newToken.accessKeySecret,
+                        stsToken: newToken.stsToken
+                    };
+                },
+                refreshSTSTokenInterval: 300000 // 5分钟刷新一次
+            });
+        }
+
+        // 拖放事件处理
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.dataTransfer.dropEffect = 'copy';
+            document.getElementById('dropArea').classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('dropArea').classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('dropArea').classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            uploadFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            uploadFiles(files);
+        }
+
+        // 上传文件
+        async function uploadFiles(files) {
+            if (!files.length) return;
+
+            try {
+                await initOSSClient();
+
+                document.getElementById('progressContainer').style.display = 'block';
+                document.getElementById('progressFill').style.width = '0%';
+                document.getElementById('progressText').textContent = '准备上传...';
+
+                const fileList = document.getElementById('fileList');
+                fileList.innerHTML = '';
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    await uploadSingleFile(file, i + 1, files.length);
+                }
+
+                showMessage('uploadMessage', '所有文件上传完成！', 'success');
+
+                // 更新存储信息
+                updateStorageInfo();
+            } catch (error) {
+                showMessage('uploadMessage', error.message, 'error');
+            } finally {
+                document.getElementById('progressContainer').style.display = 'none';
+            }
+        }
+
+        // 上传单个文件
+        async function uploadSingleFile(file, current, total) {
+            return new Promise(async (resolve, reject) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <strong>${file.name}</strong>
+                        <div style="color: #6c757d; font-size: 14px;">
+                            大小：${formatFileSize(file.size)}
+                        </div>
+                    </div>
+                    <div class="file-actions">
+                        <button onclick="downloadFile('${file.name}')">下载</button>
+                        <button onclick="deleteFile('${file.name}')" style="background: #e53e3e;">删除</button>
+                    </div>
+                `;
+
+                document.getElementById('fileList').appendChild(fileItem);
+
+                const objectKey = `${stsCredentials.userPath}${Date.now()}_${file.name}`;
+
+                try {
+                    const result = await ossClient.multipartUpload(objectKey, file, {
+                        parallel: 4,
+                        partSize: 5 * 1024 * 1024, // 5MB
+                        progress: (percentage) => {
+                            const progress = (percentage * 100).toFixed(1);
+                            document.getElementById('progressText').textContent =
+                                `上传中 (${current}/${total}): ${progress}%`;
+                            document.getElementById('progressFill').style.width = `${progress}%`;
+                        },
+                        checkpoint: true
+                    });
+
+                    resolve(result);
+                } catch (error) {
+                    fileItem.classList.add('error');
+                    reject(error);
+                }
+            });
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 获取文件列表
+        async function getFileList() {
+            const token = localStorage.getItem('token');
+
+            try {
+                const response = await fetch('/api/oss/files', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '获取文件列表失败');
+                }
+
+                displayFiles(data.files);
+            } catch (error) {
+                showMessage('filesMessage', error.message, 'error');
+            }
+        }
+
+        // 显示文件列表
+        function displayFiles(files) {
+            const container = document.getElementById('filesContainer');
+
+            if (!files || files.length === 0) {
+                container.innerHTML = '<p>暂无文件</p>';
+                return;
+            }
+
+            let html = '<div class="file-list">';
+
+            files.forEach(file => {
+                const fileName = file.name.split('/').pop();
+                const fileSize = formatFileSize(file.size);
+                const date = new Date(file.lastModified).toLocaleString();
+
+                html += `
+                    <div class="file-item">
+                        <div class="file-info">
+                            <strong>${fileName}</strong>
+                            <div style="color: #6c757d; font-size: 14px;">
+                                ${fileSize} • ${date}
+                            </div>
+                        </div>
+                        <div class="file-actions">
+                            <button onclick="window.open('${file.url}')">下载</button>
+                            <button onclick="shareFile('${file.name}')" style="background: #38a169;">分享</button>
+                            <button onclick="deleteServerFile('${file.name}')" style="background: #e53e3e;">删除</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // 搜索文件
+        function searchFiles() {
+            const keyword = document.getElementById('searchInput').value;
+            // 这里可以实现文件搜索功能
+            showMessage('filesMessage', '搜索功能开发中...', 'info');
+        }
+
+        // 刷新文件列表
+        function refreshFiles() {
+            getFileList();
+        }
+
+        // 分享文件
+        async function shareFile(objectKey) {
+            const token = localStorage.getItem('token');
+
+            try {
+                const response = await fetch('/api/oss/presigned-url', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ objectKey })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '生成分享链接失败');
+                }
+
+                navigator.clipboard.writeText(data.url);
+                alert('分享链接已复制到剪贴板！\n链接24小时内有效。');
+            } catch (error) {
+                alert('生成分享链接失败：' + error.message);
+            }
+        }
+
+        // 删除服务器文件
+        async function deleteServerFile(objectKey) {
+            if (!confirm('确定要删除这个文件吗？')) return;
+
+            const token = localStorage.getItem('token');
+
+            try {
+                const response = await fetch(`/api/oss/file/${encodeURIComponent(objectKey)}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || '删除失败');
+                }
+
+                showMessage('filesMessage', '文件删除成功', 'success');
+                refreshFiles();
+                updateStorageInfo();
+            } catch (error) {
+                showMessage('filesMessage', error.message, 'error');
+            }
+        }
+
+        // 修改密码
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+            if (!currentPassword || !newPassword || !confirmNewPassword) {
+                showMessage('profileMessage', '请填写所有字段', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmNewPassword) {
+                showMessage('profileMessage', '两次新密码输入不一致', 'error');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showMessage('profileMessage', '新密码至少需要6位', 'error');
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+
+            try {
+                const response = await fetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '修改密码失败');
+                }
+
+                showMessage('profileMessage', '密码修改成功！', 'success');
+
+                // 清空输入框
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmNewPassword').value = '';
+            } catch (error) {
+                showMessage('profileMessage', error.message, 'error');
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('token');
+            currentUser = null;
+            stsCredentials = null;
+            ossClient = null;
+
+            document.getElementById('authSection').classList.remove('hidden');
+            document.getElementById('uploadBtn').classList.add('hidden');
+            document.getElementById('filesBtn').classList.add('hidden');
+            document.getElementById('profileBtn').classList.add('hidden');
+            document.getElementById('logoutBtn').classList.add('hidden');
+
+            showSection('auth');
+        }
+
+        // 页面加载时检查登录状态
+        window.onload = async function () {
+            const token = localStorage.getItem('token');
+
+            if (token) {
+                try {
+                    const response = await fetch('/api/auth/me', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        currentUser = data.user;
+                        updateUserInterface();
+                        showSection('upload');
+                        updateStorageInfo();
+                    } else {
+                        localStorage.removeItem('token');
+                    }
+                } catch (error) {
+                    localStorage.removeItem('token');
+                }
+            }
+        };
+    </script>
 </body>
 
 </html>
