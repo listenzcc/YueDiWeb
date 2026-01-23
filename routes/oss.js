@@ -100,16 +100,18 @@ router.get('/sts-token', authMiddleware, async (req, res) => {
 
         // STS 请求参数
         const params = {
-            RoleArn: config.aliyun.roleArn,
-            RoleSessionName: `oss-user-${user._id}-${Date.now()}`,
-            DurationSeconds: 3600, // 1小时有效期
-            Policy: JSON.stringify(policy)
+            roleArn: config.aliyun.roleArn,
+            roleSessionName: `oss-user-${user._id}-${Date.now()}`,
+            durationSeconds: 3600, // 1小时有效期
+            policy: JSON.stringify(policy)
         };
+        const request = new STS.AssumeRoleRequest(params);
 
         console.log('发送 STS 请求，参数:', JSON.stringify(params, null, 2));
 
         // 调用 STS API
-        const result = await stsClient.assumeRole(params);
+        // const result = await stsClient.assumeRole(params);
+        const result = await stsClient.assumeRoleWithOptions(request);
 
         console.log('STS Token 获取成功');
 
