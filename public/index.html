@@ -554,11 +554,12 @@
             console.log('沿用已有 STS 凭证');
 
             ossClient = new OSS({
-                // region: stsCredentials.region,
+                region: 'oss-cn-beijing',
                 accessKeyId: stsCredentials.credentials.accessKeyId,
                 accessKeySecret: stsCredentials.credentials.accessKeySecret,
                 stsToken: stsCredentials.credentials.stsToken,
-                bucket: stsCredentials.bucket,
+                bucket: 'bucket-listenzcc-shenyuedi-20260121',
+                secure: true,  // OSS SDK 里开启 HTTPS
                 refreshSTSToken: async () => {
                     const newToken = await getSTSToken();
                     return {
