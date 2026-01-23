@@ -103,7 +103,7 @@ router.get('/sts-token', authMiddleware, async (req, res) => {
                 accessKeyId: result.body.credentials.accessKeyId,
                 accessKeySecret: result.body.credentials.accessKeySecret,
                 stsToken: result.body.credentials.securityToken,
-                expiration: result.credentials.expiration
+                expiration: result.body.credentials.expiration
             },
             config: {
                 bucket: config.aliyun.bucket,
