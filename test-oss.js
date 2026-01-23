@@ -10,3 +10,4 @@ const stsClient = new STS.default({
 console.log(stsClient)
 
 console.log(stsClient.assumeRole)
+

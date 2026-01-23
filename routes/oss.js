@@ -1,3 +1,4 @@
+const OpenAPI = require('@alicloud/openapi-client');
 const express = require('express');
 const STS = require('@alicloud/sts20150401');
 const config = require('../config/config');
@@ -61,42 +62,22 @@ router.get('/sts-token', authMiddleware, async (req, res) => {
 
         // 定义详细的策略
         const policy = {
-            "Version": "1",
-            "Statement": [
+            Version: "1",
+            Statement: [
                 {
-                    "Effect": "Allow",
-                    "Action": [
+                    Effect: "Allow",
+                    Action: [
                         "oss:PutObject",
                         "oss:GetObject",
-                        "oss:DeleteObject",
-                        "oss:ListObjects",
-                        "oss:ListParts",
-                        "oss:AbortMultipartUpload"
+                        "oss:DeleteObject"
                     ],
-                    "Resource": [
+                    Resource: [
                         `acs:oss:*:*:${config.aliyun.bucket}/users/${user._id}/*`
-                    ],
-                    "Condition": {
-                        "NumericLessThanEquals": {
-                            "oss:ContentLength": config.upload.maxFileSize || 10 * 1024 * 1024 * 1024
-                        },
-                        "StringLike": {
-                            "oss:Prefix": `users/${user._id}/*`
-                        }
-                    }
-                },
-                {
-                    "Effect": "Allow",
-                    "Action": [
-                        "oss:GetBucketLocation",
-                        "oss:ListObjects"
-                    ],
-                    "Resource": [
-                        `acs:oss:*:*:${config.aliyun.bucket}`
                     ]
                 }
             ]
         };
+
 
         // STS 请求参数
         const params = {
@@ -111,7 +92,7 @@ router.get('/sts-token', authMiddleware, async (req, res) => {
 
         // 调用 STS API
         // const result = await stsClient.assumeRole(params);
-        const result = await stsClient.assumeRoleWithOptions(request);
+        const result = await stsClient.assumeRole(request);
 
         console.log('STS Token 获取成功');
 
@@ -119,10 +100,10 @@ router.get('/sts-token', authMiddleware, async (req, res) => {
         res.json({
             success: true,
             credentials: {
-                accessKeyId: result.Credentials.AccessKeyId,
-                accessKeySecret: result.Credentials.AccessKeySecret,
-                stsToken: result.Credentials.SecurityToken,
-                expiration: result.Credentials.Expiration
+                accessKeyId: result.body.credentials.accessKeyId,
+                accessKeySecret: result.body.credentials.accessKeySecret,
+                stsToken: result.body.credentials.securityToken,
+                expiration: result.credentials.expiration
             },
             config: {
                 bucket: config.aliyun.bucket,
