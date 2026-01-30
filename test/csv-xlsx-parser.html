@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拖放解析CSV/Excel</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        #dropZone {
+            width: 400px;
+            height: 200px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            text-align: center;
+            line-height: 200px;
+            margin: 20px auto;
+            cursor: pointer;
+        }
+
+        #dropZone.dragover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="dropZone">
+        拖拽CSV或Excel文件到这里，或点击选择文件
+        <br>
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="margin-top: 20px;">
+    </div>
+
+    <div id="fileInfo"></div>
+    <div id="dataTable"></div>
+
+    <script>
+        // 获取元素
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const dataTable = document.getElementById('dataTable');
+
+        // 点击区域触发文件选择
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // 文件选择事件
+        fileInput.addEventListener('change', handleFile);
+
+        // 拖放事件处理
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+
+            if (e.dataTransfer.files.length) {
+                handleFile(e);
+            }
+        });
+
+        function handleFile(e) {
+            const file = e.target.files?.[0] || e.dataTransfer.files?.[0];
+
+            console.log('File comes', file)
+
+            if (!file) return;
+
+            // 显示文件信息
+            fileInfo.innerHTML = `
+                <h3>文件信息</h3>
+                <p>文件名: ${file.name}</p>
+                <p>文件大小: ${(file.size / 1024).toFixed(2)} KB</p>
+                <p>文件类型: ${file.type || '未知'}</p>
+            `;
+
+            // 解析文件
+            parseFile(file);
+        }
+
+        function parseFile(file) {
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                const data = new Uint8Array(event.target.result);
+
+                try {
+                    // 使用SheetJS解析
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    console.log(workbook.SheetNames)
+
+                    let jsonData = [], cols = {};
+
+                    workbook.SheetNames.map(name => {
+                        console.log(`Parsing sheet ${name}`)
+                        const sheet = workbook.Sheets[name];
+                        let lst = XLSX.utils.sheet_to_json(sheet);
+                        lst.map(e => {
+                            Object.assign(e, { __sheet__: name });
+                            Object.getOwnPropertyNames(e).map(k => cols[k] = 0)
+                        }
+                        )
+                        jsonData = jsonData.concat(lst)
+                    })
+
+                    console.log(cols)
+                    console.log(jsonData)
+
+                    displayTable(jsonData, cols);
+                } catch (error) {
+                    console.error('解析错误:', error);
+                    // 如果解析失败，尝试作为CSV处理
+                    const csvData = new TextDecoder().decode(data);
+                    const lines = csvData.split('\n');
+                    if (lines.length > 1) {
+                        const headers = lines[0].split(',');
+                        const csvJson = lines.slice(1).map(line => {
+                            const obj = {};
+                            const values = line.split(',');
+                            headers.forEach((header, index) => {
+                                obj[header.trim()] = values[index]?.trim() || '';
+                            });
+                            return obj;
+                        });
+                        displayTable(csvJson);
+                    }
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function displayTable(data, cols = undefined) {
+            if (!data || data.length === 0) {
+                dataTable.innerHTML = '<p>没有数据</p>';
+                return;
+            }
+
+            let headers = Object.keys(data[0]);
+            if (cols) {
+                headers = Object.keys(cols)
+            }
+
+            let tableHTML = '<table>';
+
+            // 表头
+            tableHTML += '<thead><tr>';
+            headers.forEach(header => {
+                tableHTML += `<th>${header}</th>`;
+            });
+            tableHTML += '</tr></thead>';
+
+            // 数据行
+            tableHTML += '<tbody>';
+            data.forEach((row, index) => {
+                if (index < 100) { // 限制显示100行
+                    tableHTML += '<tr>';
+                    headers.forEach(header => {
+                        tableHTML += `<td>${row[header] || ''}</td>`;
+                    });
+                    tableHTML += '</tr>';
+                }
+            });
+
+            if (data.length > 100) {
+                tableHTML += `<tr><td colspan="${headers.length}">
+                    只显示前100行，总共${data.length}行
+                </td></tr>`;
+            }
+
+            tableHTML += '</tbody></table>';
+            dataTable.innerHTML = tableHTML;
+        }
+    </script>
+</body>
+
+</html>

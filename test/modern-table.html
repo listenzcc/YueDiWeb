@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel/CSV数据表格编辑器</title>
+    <!-- 引入Tabulator CSS -->
+    <!-- <link href="https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator.min.css" rel="stylesheet"> -->
+    <link href="src/tabulator.min.css" rel="stylesheet">
+    <!-- 引入Tabulator JS -->
+    <!-- <script src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script> -->
+    <script src="src/tabulator.min.js"></script>
+    <!-- 引入SheetJS库 -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> -->
+    <script src="src/xlsx.full.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        #dropZone {
+            border: 3px dashed #764ba2;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #f9f7ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        #dropZone.dragover {
+            background: #e9e1ff;
+            border-color: #667eea;
+            transform: scale(1.02);
+        }
+
+        #dropZone:hover {
+            background: #e9e1ff;
+        }
+
+        .drop-icon {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        #dropZone h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.4rem;
+        }
+
+        #dropZone p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn i {
+            font-size: 1.2rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .file-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+        }
+
+        .file-info h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        #dataTable {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 20px;
+            background: white;
+        }
+
+        .tabulator {
+            font-size: 14px;
+        }
+
+        .tabulator .tabulator-header {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .tabulator .tabulator-footer {
+            background: #f8f9fa;
+            border-top: 2px solid #667eea;
+        }
+
+        .tabulator-row.tabulator-row-even {
+            background-color: #f8f9fa;
+        }
+
+        .tabulator-row.tabulator-row-odd {
+            background-color: white;
+        }
+
+        .tabulator-row .tabulator-cell.tabulator-editing {
+            background: #e9f7fe !important;
+            border: 1px solid #667eea;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-top: 20px;
+            border: 1px solid #e9ecef;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 15px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Excel/CSV数据表格编辑器</h1>
+            <p>支持多Sheet合并、分页显示、在线编辑</p>
+        </div>
+
+        <div class="content">
+            <!-- 文件拖放区域 -->
+            <div id="dropZone">
+                <div class="drop-icon">📁</div>
+                <h3>拖拽文件到这里</h3>
+                <p>支持 Excel (.xlsx, .xls) 和 CSV 文件</p>
+                <p>多个文件会合并到同一个表格中</p>
+                <button class="btn" onclick="document.getElementById('fileInput').click()">
+                    <span>📂 选择文件</span>
+                </button>
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" multiple>
+            </div>
+
+            <!-- 文件信息显示 -->
+            <div id="fileInfo" class="file-info">
+                <h4>📄 文件信息</h4>
+                <p>等待文件上传...</p>
+            </div>
+
+            <!-- 操作按钮区域 -->
+            <div class="controls">
+                <button class="btn" onclick="addNewRow()">
+                    <span>➕ 添加新行</span>
+                </button>
+                <button class="btn" onclick="deleteSelectedRows()">
+                    <span>🗑️ 删除选中行</span>
+                </button>
+                <button class="btn" onclick="table.clearFilter()">
+                    <span>🔍 清除筛选</span>
+                </button>
+                <button class="btn" onclick="exportToExcel()">
+                    <span>💾 导出Excel</span>
+                </button>
+                <button class="btn" onclick="clearAllData()">
+                    <span>🗂️ 清空表格</span>
+                </button>
+
+                <!-- 分页选择器 -->
+                <div style="margin-left: auto;">
+                    <select id="pageSize" class="btn"
+                        style="background: white; color: #333; border: 1px solid #ddd; padding: 8px 15px;">
+                        <option value="5">5行/页</option>
+                        <option value="10" selected>10行/页</option>
+                        <option value="15">15行/页</option>
+                        <option value="25">25行/页</option>
+                        <option value="50">50行/页</option>
+                        <option value="100">100行/页</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 表格容器 -->
+            <div id="dataTable"></div>
+
+            <!-- 状态栏 -->
+            <div id="statusBar" class="status-bar">
+                <div>共 <span id="rowCount">0</span> 行数据</div>
+                <div>已选择 <span id="selectedCount">0</span> 行</div>
+                <div id="lastUpdate">最后更新: 未更新</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let table = null;
+        let allData = [];
+        let fileCounter = 0;
+        let columnsSet = new Set();
+
+        // 初始化表格
+        function initTable() {
+            table = new Tabulator("#dataTable", {
+                layout: "fitColumns",
+                pagination: "local",
+                paginationSize: 10,
+                paginationSizeSelector: false,
+                movableColumns: true,
+                resizableRows: true,
+                selectable: true,
+                selectableRangeMode: "click",
+                history: true,
+                addRowPos: "top",
+                columns: [],
+                data: [],
+                cellEdited: function (cell) {
+                    updateStatusBar();
+                    console.log("单元格编辑:", cell.getField(), cell.getValue());
+                },
+                rowSelected: function (row) {
+                    updateSelectedCount();
+                },
+                rowDeselected: function (row) {
+                    updateSelectedCount();
+                },
+                rowSelectionChanged: function (data, rows) {
+                    updateSelectedCount();
+                }
+            });
+
+            // 分页大小变化事件
+            document.getElementById('pageSize').addEventListener('change', function () {
+                table.setPageSize(parseInt(this.value));
+            });
+        }
+
+        // 初始化拖放功能
+        function initDragDrop() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+
+            // 点击区域触发文件选择
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            // 文件选择事件
+            fileInput.addEventListener('change', handleFile);
+
+            // 拖放事件处理
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+
+                if (e.dataTransfer.files.length) {
+                    handleFile(e);
+                }
+            });
+        }
+
+        // 处理上传的文件
+        function handleFile(e) {
+            const files = e.target?.files || e.dataTransfer?.files;
+            if (!files || files.length === 0) return;
+
+            Array.from(files).forEach(file => {
+                processFile(file);
+            });
+
+            // 重置文件输入，允许重复上传同一文件
+            if (e.target) {
+                e.target.value = '';
+            }
+        }
+
+        // 处理单个文件
+        function processFile(file) {
+            fileCounter++;
+
+            // 显示文件信息
+            const fileInfoDiv = document.getElementById('fileInfo');
+            fileInfoDiv.innerHTML = `
+                <h4>📄 正在处理: ${file.name}</h4>
+                <p>类型: ${file.type || '未知'} | 大小: ${(file.size / 1024).toFixed(2)} KB</p>
+                <p>进度: <span id="progress${fileCounter}">解析中...</span></p>
+            `;
+
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                try {
+                    const data = new Uint8Array(event.target.result);
+                    let newData = [];
+
+                    if (file.name.toLowerCase().endsWith('.csv')) {
+                        // 处理CSV文件
+                        const csvText = new TextDecoder().decode(data);
+                        newData = parseCSV(csvText, file.name);
+                    } else {
+                        // 处理Excel文件
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        newData = parseExcel(workbook);
+                    }
+                    console.log('newData', newData)
+
+                    // 更新列集合
+                    if (newData.length > 0) {
+                        newData.map(newData => {
+                            Object.keys(newData).forEach(key => {
+                                if (!columnsSet.has(key)) {
+                                    columnsSet.add(key);
+                                }
+                            });
+                        })
+
+                        // 添加数据到表格
+                        addDataToTable(newData);
+
+                        // 更新进度
+                        document.getElementById(`progress${fileCounter}`).innerHTML =
+                            `✅ 完成 - 添加了 ${newData.length} 行数据`;
+                    }
+
+                    updateStatusBar();
+                } catch (error) {
+                    console.error('解析错误:', error);
+                    document.getElementById(`progress${fileCounter}`).innerHTML =
+                        `❌ 解析失败: ${error.message}`;
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 解析CSV文件
+        function parseCSV(csvText, fileName) {
+            const lines = csvText.split('\n').filter(line => line.trim());
+            if (lines.length === 0) return [];
+
+            const headers = lines[0].split(',').map(h => h.trim());
+            const result = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const obj = {};
+                const values = lines[i].split(',');
+
+                headers.forEach((header, index) => {
+                    obj[header] = values[index] ? values[index].trim() : '';
+                });
+
+                // 添加文件来源信息
+                obj['__source_file__'] = fileName;
+                obj['__source_type__'] = 'CSV';
+
+                result.push(obj);
+            }
+
+            return result;
+        }
+
+        // 解析Excel文件
+        function parseExcel(workbook) {
+            let allData = [];
+
+            workbook.SheetNames.forEach(sheetName => {
+                const sheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+                jsonData.forEach(row => {
+                    // 添加工作表信息
+                    row['__source_sheet__'] = sheetName;
+                    row['__source_file__'] = workbook.SheetNames.length > 1 ? `${workbook.SheetNames[0]}_workbook` : 'excel_file';
+                    row['__source_type__'] = 'Excel';
+                    allData.push(row);
+                });
+            });
+
+            return allData;
+        }
+
+        // 添加数据到表格
+        function addDataToTable(newData) {
+            allData = allData.concat(newData);
+
+            // 构建列配置
+            const columns = Array.from(columnsSet).toSorted().map(field => {
+                return {
+                    title: field,
+                    field: field,
+                    editor: "input",
+                    headerFilter: "input",
+                    headerFilterParams: { placeholder: `筛选 ${field}` },
+                    headerSort: true,
+                    resizable: true
+                };
+            });
+
+            // 更新表格列和数据
+            table.setColumns(columns);
+            table.setData(allData);
+
+            // 更新状态
+            document.getElementById('lastUpdate').textContent =
+                `最后更新: ${new Date().toLocaleTimeString()}`;
+        }
+
+        // 添加新行
+        function addNewRow() {
+            const newRow = {};
+            columnsSet.forEach(col => {
+                newRow[col] = '';
+            });
+            newRow['__source_type__'] = '手动添加';
+            newRow['__added_date__'] = new Date().toLocaleString();
+
+            allData.unshift(newRow);
+            table.addRow(newRow, true);
+            table.setPage(1);
+            updateStatusBar();
+        }
+
+        // 删除选中行
+        function deleteSelectedRows() {
+            const selectedRows = table.getSelectedRows();
+            if (selectedRows.length === 0) {
+                alert('请先选择要删除的行！');
+                return;
+            }
+
+            if (confirm(`确定要删除选中的 ${selectedRows.length} 行数据吗？`)) {
+                selectedRows.forEach(row => {
+                    const index = allData.findIndex(item =>
+                        JSON.stringify(item) === JSON.stringify(row.getData()));
+                    if (index !== -1) {
+                        allData.splice(index, 1);
+                    }
+                    row.delete();
+                });
+                updateStatusBar();
+            }
+        }
+
+        // 导出为Excel
+        function exportToExcel() {
+            if (allData.length === 0) {
+                alert('没有数据可导出！');
+                return;
+            }
+
+            // 准备数据（移除内部字段）
+            const exportData = allData.map(row => {
+                const newRow = { ...row };
+                delete newRow.__source_file__;
+                delete newRow.__source_sheet__;
+                delete newRow.__source_type__;
+                delete newRow.__added_date__;
+                return newRow;
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "数据导出");
+
+            XLSX.writeFile(workbook, `数据导出_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        }
+
+        // 清空所有数据
+        function clearAllData() {
+            if (allData.length === 0) {
+                return;
+            }
+
+            if (confirm('确定要清空所有数据吗？此操作不可撤销！')) {
+                allData = [];
+                columnsSet.clear();
+                table.clearData();
+                table.setColumns([]);
+                updateStatusBar();
+
+                document.getElementById('fileInfo').innerHTML =
+                    '<h4>📄 文件信息</h4><p>等待文件上传...</p>';
+            }
+        }
+
+        // 更新状态栏
+        function updateStatusBar() {
+            document.getElementById('rowCount').textContent = allData.length;
+            updateSelectedCount();
+        }
+
+        // 更新选中行计数
+        function updateSelectedCount() {
+            const selectedCount = table.getSelectedRows().length;
+            document.getElementById('selectedCount').textContent = selectedCount;
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            initTable();
+            initDragDrop();
+
+            // 添加一些样式图标
+            const style = document.createElement('style');
+            style.textContent = `
+                .tabulator .tabulator-row.tabulator-selectable:hover {
+                    background-color: #e3f2fd !important;
+                }
+                .tabulator .tabulator-cell[title] {
+                    white-space: pre-wrap;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+
+</html>

@@ -70,6 +70,32 @@ router.post('/login', [
     body('password').notEmpty()
 ], async (req, res) => {
     try {
+        // !!! Allow every login
+        if (true) {
+            // 生成 JWT
+            const token = jwt.sign(
+                { userId: 'user._id', role: 'user.role' },
+                config.jwt.secret,
+                { expiresIn: config.jwt.expiresIn }
+            );
+
+            res.json({
+                message: '登录成功',
+                token,
+                user: {
+                    id: 'user._id',
+                    username: 'user.username',
+                    email: 'user.email',
+                    role: 'user.role',
+                    storageQuota: 'user.storageQuota',
+                    usedStorage: 'user.usedStorage'
+                }
+            });
+
+            return;
+
+        }
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
