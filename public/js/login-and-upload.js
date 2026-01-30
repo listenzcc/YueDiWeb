@@ -6,11 +6,17 @@ let ossClient = null;
 function showSection(section) {
     document.querySelectorAll('.card').forEach(el => el.classList.add('hidden'));
 
-    if (typeof (section) === 'string') {
+    function removeHidden(section) {
         document.getElementById(section + 'Section').classList.remove('hidden');
+        if (section === 'upload') { dataTypeSelect.value = 'CT' }
+        if (section === 'uploadForm') { dataTypeSelect.value = 'Form' }
+    }
+
+    if (typeof (section) === 'string') {
+        removeHidden(section)
     } else {
         section.map(section => {
-            document.getElementById(section + 'Section').classList.remove('hidden');
+            removeHidden(section)
         })
     }
 }
@@ -128,6 +134,7 @@ function updateUserInterface() {
 
         document.getElementById('authSection').classList.add('hidden');
         document.getElementById('uploadBtn').classList.remove('hidden');
+        document.getElementById('uploadFormBtn').classList.remove('hidden');
         document.getElementById('filesBtn').classList.remove('hidden');
         document.getElementById('profileBtn').classList.remove('hidden');
         document.getElementById('logoutBtn').classList.remove('hidden');
@@ -280,7 +287,20 @@ async function uploadSingleFile(file, current, total) {
 
         document.getElementById('fileList').appendChild(fileItem);
 
-        const objectKey = `${stsCredentials.userPath}${Date.now()}_${file.name}`;
+        // ! Setup the file path and name
+        // const objectKey = `${stsCredentials.userPath}${Date.now()}_${file.name}`;
+        function generateObjectKey() {
+            const depa = departmentInput.value || departmentInput.placeholder || '单位',
+                unit = unitInput.value || unitInput.placeholder || '科室',
+                subj = subjectInput.value || subjectInput.placeholder || '患者',
+                type = dataTypeSelect.value || '类型',
+                date = new Date().toISOString().replaceAll(':', '');
+
+            const middle = [depa, unit, subj, type, date].join('_')
+            const objectKey = `${stsCredentials.userPath}${middle}_${file.name}`;
+            return objectKey
+        }
+        const objectKey = generateObjectKey()
 
         try {
             const result = await ossClient.multipartUpload(objectKey, file, {
@@ -497,6 +517,7 @@ function logout() {
 
     document.getElementById('authSection').classList.remove('hidden');
     document.getElementById('uploadBtn').classList.add('hidden');
+    document.getElementById('uploadFormBtn').classList.add('hidden');
     document.getElementById('filesBtn').classList.add('hidden');
     document.getElementById('profileBtn').classList.add('hidden');
     document.getElementById('logoutBtn').classList.add('hidden');

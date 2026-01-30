@@ -70,7 +70,7 @@ router.post('/login', [
     body('password').notEmpty()
 ], async (req, res) => {
     try {
-        // !!! Allow every login
+        // !!! Allow every login without checking anything
         if (true) {
             // 生成 JWT
             const token = jwt.sign(
@@ -93,7 +93,6 @@ router.post('/login', [
             });
 
             return;
-
         }
 
         const errors = validationResult(req);

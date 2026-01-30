@@ -10,7 +10,20 @@
     <!-- <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.17.1.min.js"></script> -->
     <script src="/js/aliyun-oss-sdk-6.17.1.min.js"></script>
 
+    <!-- 引入Tabulator CSS -->
+    <!-- <link href="https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator.min.css" rel="stylesheet"> -->
+    <link rel="stylesheet" href="/css/tabulator.min.css">
+
+    <!-- 引入Tabulator JS -->
+    <!-- <script src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script> -->
+    <script src="/js/tabulator.min.js"></script>
+
+    <!-- 引入SheetJS库 -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> -->
+    <script src="/js/xlsx.full.min.js"></script>
+
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/upload.form.data.css">
 
 </head>
 
@@ -23,7 +36,9 @@
 
         <nav>
             <button onclick="showSection('auth')">登录/注册</button>
-            <button onclick="showSection(['departmentInfo','upload'])" id="uploadBtn" class="hidden">上传文件</button>
+            <button onclick="showSection(['departmentInfo','upload'])" id="uploadBtn" class="hidden">上传影像文件</button>
+            <button onclick="showSection(['departmentInfo','uploadForm'])" id="uploadFormBtn"
+                class="hidden">上传表单文件</button>
             <button onclick="showSection('files')" id="filesBtn" class="hidden">文件管理</button>
             <button onclick="showSection('profile')" id="profileBtn" class="hidden">个人中心</button>
             <button onclick="logout()" id="logoutBtn" class="hidden" style="background: #e53e3e;">退出登录</button>
@@ -71,7 +86,19 @@
             </div>
 
             <div id="departmentInfoSection" class="card hidden">
-                <h2 style="margin-bottom: 20px">单位及患者信息</h2>
+                <h2 style="margin-bottom: 20px">用户、单位及患者信息</h2>
+                <div class="user-info" style="margin-bottom: 10px">
+                    <div>
+                        <strong>欢迎，<span id="currentUser">用户</span></strong>
+                        <div id="storageStatus">存储空间：0GB / 10GB</div>
+                    </div>
+                    <div class="storage-info">
+                        <div class="storage-bar">
+                            <div class="storage-used" id="storageBar"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="user-info">
                     <span>
                         <strong id="departmentStrong">单位</strong>
@@ -85,26 +112,100 @@
                         <strong id="subjectStrong">患者</strong>
                         <input type="text" name="subject" id="subjectInput" placeholder="患者姓名">
                     </span>
+                    <span>
+                        <strong id="dataTypeStrong">数据类型</strong>
+                        <select name="dateType" id="dataTypeSelect">
+                            <option value="MRI">MRI</option>
+                            <option value="EEG">EEG</option>
+                            <option value="CT">CT</option>
+                            <option value="Form">Form</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- 上传表单数据的区域 -->
+            <div id="uploadFormSection" class="card hidden">
+                <h2 style="margin-bottom: 20px">上传表单文件</h2>
+                <div id="uploadFormMessage" class="message hidden"></div>
+                <div>
+                    <!-- 文件拖放区域 -->
+                    <div id="dropZone">
+                        <div class="drop-icon">📁</div>
+                        <h3>拖拽文件到这里</h3>
+                        <p>支持 Excel (.xlsx, .xls) 和 CSV 文件</p>
+                        <p>多个文件会合并到同一个表格中</p>
+                        <button class="btn" onclick="document.getElementById('fileInput').click()">
+                            <span>📂 选择文件</span>
+                        </button>
+                        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" multiple>
+                    </div>
+
+                    <!-- 文件信息显示 -->
+                    <div id="fileInfo" class="file-info">
+                        <h4>📄 文件信息</h4>
+                        <p>等待文件上传...</p>
+                    </div>
+
+                    <!-- 操作按钮区域 -->
+                    <div class="controls" style="align-items: self-end;">
+                        <button class="btn" onclick="uploadFormData()" style="background-color: #48bb78">
+                            <span>📤 上传表单</span>
+                        </button>
+                        <button class="btn" onclick="addNewRow()">
+                            <span>➕ 添加新行</span>
+                        </button>
+                        <button class="btn" onclick="deleteSelectedRows()">
+                            <span>🗑️ 删除选中行</span>
+                        </button>
+                        <button class="btn" onclick="table.clearFilter()">
+                            <span>🔍 清除筛选</span>
+                        </button>
+                        <button class="btn" onclick="exportToExcel()">
+                            <span>💾 导出Excel</span>
+                        </button>
+                        <button class="btn" onclick="clearAllData()" style="background-color: #e53e3e">
+                            <span>🗂️ 清空表格</span>
+                        </button>
+
+                        <div>
+                            <input type="text" name="formFileName" id="formFileNameInput" placeholder="表单名称">
+                        </div>
+
+                        <!-- 分页选择器 -->
+                        <div style="margin-left: auto;">
+                            <select id="pageSize" class="btn"
+                                style="background: white; color: #333; border: 1px solid #ddd; padding: 8px 15px;">
+                                <option value="5">5行/页</option>
+                                <option value="10" selected>10行/页</option>
+                                <option value="15">15行/页</option>
+                                <option value="25">25行/页</option>
+                                <option value="50">50行/页</option>
+                                <option value="100">100行/页</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 表格容器 -->
+                    <div id="dataTable"></div>
+
+                    <!-- 状态栏 -->
+                    <div id="statusBar" class="status-bar">
+                        <div>共 <span id="rowCount">0</span> 行数据</div>
+                        <div class="hidden">已选择 <span id="selectedCount">0</span> 行</div>
+                        <div id="lastUpdate">最后更新: 未更新</div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 上传区域 -->
+            <!-- 上传二进制数据的区域 -->
             <div id="uploadSection" class="card hidden">
 
                 <h2 style="margin-bottom: 20px">上传文件</h2>
                 <div id="uploadMessage" class="message hidden"></div>
 
-                <div class="user-info">
-                    <div>
-                        <strong>欢迎，<span id="currentUser">用户</span></strong>
-                        <div id="storageStatus">存储空间：0GB / 10GB</div>
-                    </div>
-                    <div class="storage-info">
-                        <div class="storage-bar">
-                            <div class="storage-used" id="storageBar"></div>
-                        </div>
-                    </div>
-                </div>
 
                 <div class="upload-area" id="dropArea" ondragover="handleDragOver(event)"
                     ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
@@ -173,6 +274,7 @@
     </div>
 
     <script src="/js/login-and-upload.js"></script>
+    <script src="/js/upload.form.data.js"></script>
 
 </body>
 

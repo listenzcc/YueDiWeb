@@ -80,7 +80,8 @@ label {
 
 input[type="text"],
 input[type="email"],
-input[type="password"] {
+input[type="password"],
+select#dataTypeSelect {
     width: 100%;
     padding: 12px;
     border: 2px solid #e9ecef;
