@@ -272,6 +272,9 @@ router.get('/files', authMiddleware, async (req, res) => {
             type: getFileType(obj.name)
         }));
 
+        // 从新到旧
+        files.sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified));
+
         res.json({
             success: true,
             files: files,
