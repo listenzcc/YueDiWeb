@@ -97,6 +97,7 @@
                             <div class="storage-used" id="storageBar"></div>
                         </div>
                     </div>
+
                 </div>
 
                 <div class="user-info">
@@ -122,6 +123,17 @@
                             <option value="Other">Other</option>
                         </select>
                     </span>
+                </div>
+
+                <div class="user-info">
+                    <div class="progress-container" id="progressContainer" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div id="progressText">准备上传...</div>
+                    </div>
+
+                    <div id="fileList" class="file-list"></div>
                 </div>
 
             </div>
@@ -217,14 +229,6 @@
                     <button onclick="document.getElementById('fileInput').click()">选择文件</button>
                 </div>
 
-                <div class="progress-container" id="progressContainer" style="display: none;">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <div id="progressText">准备上传...</div>
-                </div>
-
-                <div id="fileList" class="file-list"></div>
             </div>
 
             <!-- 文件管理区域 -->

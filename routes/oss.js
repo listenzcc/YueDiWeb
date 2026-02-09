@@ -4,11 +4,13 @@ const STS = require('@alicloud/sts20150401');
 const config = require('../config/config');
 const { authMiddleware } = require('../middleware/auth');
 const User = require('../models/User');
+const fetch = require('node-fetch')
+const OSS = require('ali-oss');
 
 const router = express.Router();
 
 // 创建 STS 客户端
-const createSTSClient = () => {
+const createSTSClient_old = () => {
     return new STS.default({
         accessKeyId: config.aliyun.accessKeyId,
         accessKeySecret: config.aliyun.accessKeySecret,
@@ -16,6 +18,50 @@ const createSTSClient = () => {
         apiVersion: '2015-04-01'
     });
 };
+
+const roleName = 'zcc-ecs-ram'
+
+// 从元数据获取临时凭证（建议封装为 async 函数）
+async function getEcsRamRoleCredentials(roleName) {
+    const token = await fetch('http://100.100.100.200/latest/api/token', {
+        method: 'PUT',
+        headers: { 'X-aliyun-ecs-metadata-token-ttl-seconds': '60' }
+    }).then(res => res.text());
+
+    const resp = await fetch(
+        `http://100.100.100.200/latest/meta-data/ram/security-credentials/${roleName}`,
+        { headers: { 'X-aliyun-ecs-metadata-token': token } }
+    );
+    return await resp.json();
+}
+
+// 创建 STS 客户端
+const createSTSClient = async () => {
+    const creds = await getEcsRamRoleCredentials(roleName);
+    if (creds.Code !== 'Success') throw new Error('Failed to get RAM role credentials');
+
+    return new STS.default({
+        accessKeyId: creds.AccessKeyId,
+        accessKeySecret: creds.AccessKeySecret,
+        securityToken: creds.SecurityToken, // ⚠️ 必须传入
+        endpoint: 'sts.aliyuncs.com',
+        apiVersion: '2015-04-01'
+    });
+};
+
+const createOSSClient = async () => {
+    const creds = await getEcsRamRoleCredentials(roleName);
+    if (creds.Code !== 'Success') throw new Error('Failed to get RAM role credentials');
+
+    return new OSS({
+        region: config.aliyun.region,
+        bucket: config.aliyun.bucket,
+        accessKeyId: creds.AccessKeyId,
+        accessKeySecret: creds.AccessKeySecret,
+        stsToken: creds.SecurityToken, // ⚠️ 必须传入
+    });
+}
+
 
 // 获取 STS 临时凭证
 router.get('/sts-token', authMiddleware, async (req, res) => {
@@ -195,13 +241,13 @@ router.get('/files', authMiddleware, async (req, res) => {
         const user = req.user;
 
         // 使用 OSS SDK 获取文件列表
-        const OSS = require('ali-oss');
-        const ossClient = new OSS({
-            region: config.aliyun.region,
-            accessKeyId: config.aliyun.accessKeyId,
-            accessKeySecret: config.aliyun.accessKeySecret,
-            bucket: config.aliyun.bucket
-        });
+        const ossClient = await createOSSClient()
+        // new OSS({
+        //     region: config.aliyun.region,
+        //     accessKeyId: config.aliyun.accessKeyId,
+        //     accessKeySecret: config.aliyun.accessKeySecret,
+        //     bucket: config.aliyun.bucket
+        // });
 
         const result = await ossClient.list({
             prefix: `users/${user._id}/`,

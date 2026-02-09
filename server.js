@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const config = require('./config/config');
 
 const app = express();
+app.set('trust proxy', 1); // 信任 1 层代理
 
 // 安全中间件
 app.use(helmet({
