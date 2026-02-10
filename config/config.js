@@ -40,7 +40,7 @@ module.exports = {
 
     // 上传限制
     upload: {
-        maxFileSize: 10 * 1024 * 1024 * 1024, // 10GB
+        maxFileSize: 100 * 1024 * 1024 * 1024, // 100 GB
         allowedTypes: [
             'image/*',
             'video/*',

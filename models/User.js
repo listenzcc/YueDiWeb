@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
     },
     storageQuota: {
         type: Number,
-        default: 10 * 1024 * 1024 * 1024 // 10GB 默认配额
+        default: 100 * 1024 * 1024 * 1024 // 100 GB 默认配额
     },
     usedStorage: {
         type: Number,

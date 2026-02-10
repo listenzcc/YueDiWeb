@@ -105,7 +105,7 @@ router.post('/login', [
         // 查找用户
         const user = await User.findOne({ email, isActive: true });
         if (!user) {
-            return res.status(401).json({ error: '邮箱或密码错误' });
+            return res.status(401).json({ error: '用户不存在或已禁用' });
         }
 
         // 验证密码
