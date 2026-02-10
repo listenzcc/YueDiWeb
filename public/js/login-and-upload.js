@@ -23,6 +23,8 @@ function showSection(section) {
 
 // 显示注册表单
 function showRegister() {
+    alert('注册用户功能不对外开放，有需要请联系系统管理员')
+    return 1;
     document.getElementById('loginForm').classList.add('hidden');
     document.getElementById('registerForm').classList.remove('hidden');
     document.getElementById('authMessage').classList.add('hidden');
@@ -88,6 +90,9 @@ async function login() {
 
 // 注册
 async function register() {
+    alert('注册用户功能不对外开放，有需要请联系系统管理员')
+    return 1;
+
     const username = document.getElementById('regUsername').value;
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;

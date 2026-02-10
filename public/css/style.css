@@ -20,7 +20,7 @@ body {
     overflow: hidden;
 }
 
-header {
+header, footer {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 30px;
@@ -223,4 +223,56 @@ button:disabled {
 
 .hidden {
     display: none;
+}
+
+.copyright-container {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.copyright-main {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.copyright-sub {
+    font-size: 0.95rem;
+    color: white;
+    margin-bottom: 15px;
+    opacity: 0.9;
+}
+
+.copyright-badge {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    background: linear-gradient(135deg, #4299e1, #3182ce);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(66, 153, 225, 0.2);
+    transition: all 0.3s ease;
+}
+
+.badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+}
+
+.badge:nth-child(2) {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+}
+
+.badge:nth-child(3) {
+    background: linear-gradient(135deg, #ed8936, #dd6b20);
 }
