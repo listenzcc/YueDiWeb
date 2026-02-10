@@ -23,30 +23,30 @@ const roleName = 'zcc-ecs-ram'
 
 // 从元数据获取临时凭证（建议封装为 async 函数）
 async function getEcsRamRoleCredentials(roleName) {
-  const token = await fetch('http://100.100.100.200/latest/api/token', {
-    method: 'PUT',
-    headers: { 'X-aliyun-ecs-metadata-token-ttl-seconds': '60' }
-  }).then(res => res.text());
+    const token = await fetch('http://100.100.100.200/latest/api/token', {
+        method: 'PUT',
+        headers: { 'X-aliyun-ecs-metadata-token-ttl-seconds': '60' }
+    }).then(res => res.text());
 
-  const resp = await fetch(
-    `http://100.100.100.200/latest/meta-data/ram/security-credentials/${roleName}`,
-    { headers: { 'X-aliyun-ecs-metadata-token': token } }
-  );
-  return await resp.json();
+    const resp = await fetch(
+        `http://100.100.100.200/latest/meta-data/ram/security-credentials/${roleName}`,
+        { headers: { 'X-aliyun-ecs-metadata-token': token } }
+    );
+    return await resp.json();
 }
 
 // 创建 STS 客户端
 const createSTSClient = async () => {
-  const creds = await getEcsRamRoleCredentials(roleName);
-  if (creds.Code !== 'Success') throw new Error('Failed to get RAM role credentials');
-  
-  return new STS.default({
-    accessKeyId: creds.AccessKeyId,
-    accessKeySecret: creds.AccessKeySecret,
-    securityToken: creds.SecurityToken, // ⚠️ 必须传入
-    endpoint: 'sts.aliyuncs.com',
-    apiVersion: '2015-04-01'
-  });
+    const creds = await getEcsRamRoleCredentials(roleName);
+    if (creds.Code !== 'Success') throw new Error('Failed to get RAM role credentials');
+
+    return new STS.default({
+        accessKeyId: creds.AccessKeyId,
+        accessKeySecret: creds.AccessKeySecret,
+        securityToken: creds.SecurityToken, // ⚠️ 必须传入
+        endpoint: 'sts.aliyuncs.com',
+        apiVersion: '2015-04-01'
+    });
 };
 
 const createOSSClient = async () => {
@@ -240,16 +240,6 @@ router.get('/files', authMiddleware, async (req, res) => {
     try {
         const user = req.user;
 
-        // 使用 oss sdk 获取文件列表
-        /**
-        const oss = require('ali-oss');
-        const ossclient = new oss({
-            region: config.aliyun.region,
-            accesskeyid: config.aliyun.accesskeyid,
-            accesskeysecret: config.aliyun.accesskeysecret,
-            bucket: config.aliyun.bucket
-        });
-        */
 	const ossClient = await createOSSClient();
 
         const result = await ossClient.list({

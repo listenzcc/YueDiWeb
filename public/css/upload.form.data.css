@@ -79,10 +79,9 @@
     background: #e9ecef;
     padding: 15px;
     border-radius: 6px;
-    margin-bottom: 25px;
 }
 
-.file-info h4 {
+h4 {
     margin-bottom: 10px;
     color: #333;
 }
