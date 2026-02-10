@@ -8,6 +8,8 @@ const config = require('./config/config');
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // 安全中间件
 app.use(helmet({
     contentSecurityPolicy: false // 根据需要调整 CSP 设置

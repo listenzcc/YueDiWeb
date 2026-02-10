@@ -71,7 +71,7 @@ router.post('/login', [
 ], async (req, res) => {
     try {
         // !!! Allow every login without checking anything
-        if (true) {
+        if (false) {
             // 生成 JWT
             const token = jwt.sign(
                 { userId: 'user._id', role: 'user.role' },

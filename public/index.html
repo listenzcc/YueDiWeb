@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+
     <title>OSS 文件上传管理系统</title>
 
     <!-- Download the script to the local -->
@@ -99,7 +101,7 @@
                     </div>
                 </div>
 
-                <div class="user-info">
+                <div class="user-info" style="margin-bottom: 10px">
                     <span>
                         <strong id="departmentStrong">单位</strong>
                         <input type="text" name="department" id="departmentInput" placeholder="单位名称">
@@ -123,6 +125,18 @@
                         </select>
                     </span>
                 </div>
+
+		<div class="user-info">
+                    <div class="progress-container" id="progressContainer" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div id="progressText">准备上传...</div>
+                    </div>
+
+                    <div id="fileList" class="file-list" style="width: 100%"></div>
+                </div>
+
 
             </div>
 
@@ -217,14 +231,6 @@
                     <button onclick="document.getElementById('fileInput').click()">选择文件</button>
                 </div>
 
-                <div class="progress-container" id="progressContainer" style="display: none;">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <div id="progressText">准备上传...</div>
-                </div>
-
-                <div id="fileList" class="file-list"></div>
             </div>
 
             <!-- 文件管理区域 -->
