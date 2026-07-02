@@ -27,6 +27,7 @@ async function listUsers() {
         users.forEach((user, index) => {
             console.log(`${index + 1}. ${user.username} (${user.email})`);
             console.log(`   角色: ${user.role}`);
+            console.log(`   ID: ${user._id}`);
             console.log(`   注册: ${user.createdAt.toLocaleString()}`);
             console.log(`   最后登录: ${user.lastLogin ? user.lastLogin.toLocaleString() : '从未登录'}`);
             console.log(`   状态: ${user.isActive ? '活跃' : '禁用'}`);

@@ -372,9 +372,25 @@ function displayFiles(files) {
     let html = '<div class="file-list">';
 
     files.forEach(file => {
-        const fileName = file.name.split('/').pop();
+	console.log(file);
+	const split = file.name.split('/');
+        const fileName = split.pop();
+	const folder = split.join('/');
         const fileSize = formatFileSize(file.size);
         const date = new Date(file.lastModified).toLocaleString();
+
+	let folderDiv = '';
+	if (file.isMaster) {
+	    if (file.isSelf){
+		folderDiv = `<div style="color: #fc757d; font-size: 14px;">
+                                ${folder}
+                             </div>`
+	    }else{
+		folderDiv = `<div style="color: #6c757d; font-size: 14px;">
+                                ${folder}
+                             </div>`
+	    }
+	}
 
         html += `
                     <div class="file-item">
@@ -383,6 +399,7 @@ function displayFiles(files) {
                             <div style="color: #6c757d; font-size: 14px;">
                                 ${fileSize} • ${date}
                             </div>
+			    ${folderDiv}
                         </div>
                         <div class="file-actions">
                             <button onclick="window.open('${file.url}')">下载</button>
