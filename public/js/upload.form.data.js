@@ -324,7 +324,7 @@ function uploadFormData() {
     }
 
     // 获取文件名
-    const name = formFileNameInput.value || formFileNameInput.placeholder || 'autofilename';
+    const name = formFileNameInput.value || 'fn' || formFileNameInput.placeholder || 'autofilename';
 
     // 准备上传的数据
     const uploadData = {
