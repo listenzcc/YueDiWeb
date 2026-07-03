@@ -415,6 +415,9 @@ function displayFiles(files) {
                             </div>
                             ${folderDiv}
                         </div>
+                        <div class="file-actions">
+                            <button onclick="deleteServerFile('${file.name}')" style="background: #e53e3e;">删除</button>
+                        </div>
                     </div>
                 `;
         // <div class="file-actions">
