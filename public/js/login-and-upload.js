@@ -374,6 +374,7 @@ async function getFileList() {
 // 显示文件列表
 function displayFiles(files) {
     const container = document.getElementById('filesContainer');
+    const si = document.getElementById('searchInput').value;
 
     if (!files || files.length === 0) {
         container.innerHTML = '<p>暂无文件</p>';
@@ -389,6 +390,8 @@ function displayFiles(files) {
         const folder = split.join('/');
         const fileSize = formatFileSize(file.size);
         const date = new Date(file.lastModified).toLocaleString();
+
+        if (fileName.indexOf(si) == -1) return;
 
         let folderDiv = '';
         if (file.isMaster) {
