@@ -207,7 +207,7 @@ async function initOSSClient() {
                 stsToken: newToken.stsToken
             };
         },
-        refreshSTSTokenInterval: 300000 // 5分钟刷新一次
+        refreshSTSTokenInterval: 1000 * 60 * 60 // 1小时刷新一次 300000 // 5分钟刷新一次
     });
 }
 
@@ -477,19 +477,24 @@ async function deleteServerFile(objectKey) {
     const token = localStorage.getItem('token');
 
     try {
-        const response = await fetch(`/api/oss/file/${encodeURIComponent(objectKey)}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
+        await initOSSClient();
+        console.log('OSS 客户端初始化完成');
 
-        if (!response.ok) {
+        // const response = await fetch(`/api/oss/file/${encodeURIComponent(objectKey)}`, {
+        //     method: 'DELETE',
+        //     headers: {
+        //         'Authorization': `Bearer ${token}`
+        //     }
+        // });
+	
+	await ossClient.delete(objectKey);
+
+        if (false && !response.ok) {
             const data = await response.json();
             throw new Error(data.error || '删除失败');
         }
 
-        showMessage('filesMessage', '文件删除成功', 'success');
+        showMessage('filesMessage', '文件删除成功：' + objectKey, 'success');
         refreshFiles();
         updateStorageInfo();
     } catch (error) {
