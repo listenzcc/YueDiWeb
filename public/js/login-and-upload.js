@@ -284,25 +284,36 @@ async function uploadSingleFile(file, current, total) {
                             大小：${formatFileSize(file.size)}
                         </div>
                     </div>
-                    <div class="file-actions">
-                        <button onclick="downloadFile('${file.name}')">下载</button>
-                        <button onclick="deleteFile('${file.name}')" style="background: #e53e3e;">删除</button>
-                    </div>
                 `;
 
         document.getElementById('fileList').appendChild(fileItem);
 
         // ! Setup the file path and name
         // const objectKey = `${stsCredentials.userPath}${Date.now()}_${file.name}`;
-        function generateObjectKey() {
-            const depa = departmentInput.value || departmentInput.placeholder || '单位',
-                unit = unitInput.value || unitInput.placeholder || '科室',
-                subj = subjectInput.value || subjectInput.placeholder || '患者',
-                type = dataTypeSelect.value || '类型',
-                date = new Date().toISOString().replaceAll(':', '');
 
-            const middle = [depa, unit, subj, type, date].join('_')
-            const objectKey = `${stsCredentials.userPath}${middle}_${file.name}`;
+	function formatDate(date) {
+	    const parts = {
+		year: String(date.getFullYear()),
+		month: String(date.getMonth() + 1).padStart(2, '0'),
+		day: String(date.getDate()).padStart(2, '0'),
+		hour: String(date.getHours()).padStart(2, '0'),
+		minute: String(date.getMinutes()).padStart(2, '0'),
+		second: String(date.getSeconds()).padStart(2, '0')
+	    };
+	    
+	    return `${parts.year}${parts.month}${parts.day}${parts.hour}${parts.minute}${parts.second}`;
+	}
+
+        function generateObjectKey() {
+            const depa = departmentInput.value || 'd' || departmentInput.placeholder || '单位',
+                unit = unitInput.value || 'u' || unitInput.placeholder || '科室',
+                subj = subjectInput.value || 's' || subjectInput.placeholder || '患者',
+                type = dataTypeSelect.value || 't' || '类型',
+                date = formatDate(new Date()),
+		extension = file.name.split('.').pop();
+
+            const middle = [depa, unit, subj, type].join('_')
+            const objectKey = `${stsCredentials.userPath}${middle}.${file.name}.${date}.${extension}`;
             return objectKey
         }
         const objectKey = generateObjectKey()
