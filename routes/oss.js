@@ -241,11 +241,15 @@ router.get('/files', authMiddleware, async (req, res) => {
         const user = req.user;
 
 	const ossClient = await createOSSClient();
+	
+	const isMaster = user.username.startsWith('master.');
 
         const result = await ossClient.list({
-            prefix: `users/${user._id}/`,
+            prefix: isMaster ? `users/` : `users/${user._id}/`,
             'max-keys': 100
         });
+
+	// console.log(user.role, user._id, user.username);
 
         // 计算总大小
         const totalSize = result.objects ?
@@ -259,6 +263,8 @@ router.get('/files', authMiddleware, async (req, res) => {
         // 格式化文件信息
         const files = (result.objects || []).map(obj => ({
             name: obj.name,
+	    isMaster,
+	    isSelf: obj.name.indexOf(user._id) > -1,
             url: `https://${config.aliyun.bucket}.${config.aliyun.endpoint}/${obj.name}`,
             size: obj.size,
             lastModified: obj.lastModified,

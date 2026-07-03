@@ -113,7 +113,7 @@
                     </span>
                     <span>
                         <strong id="subjectStrong">患者</strong>
-                        <input type="text" name="subject" id="subjectInput" placeholder="患者姓名">
+                        <input type="text" name="subject" id="subjectInput" placeholder="患者ID(禁止直接输入姓名)">
                     </span>
                     <span>
                         <strong id="dataTypeStrong">数据类型</strong>
@@ -128,7 +128,7 @@
                 </div>
 
                 <div class="user-info">
-                    <span>
+                    <span style="width: 100%">
                         <strong>上传进度</strong>
 			    <div class="progress-container" id="progressContainer" style="display: none;">
 				<div class="progress-bar">
@@ -228,7 +228,7 @@
                     ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
                     <div style="font-size: 48px; margin-bottom: 20px;">📤</div>
                     <h3>拖拽文件到此处上传</h3>
-                    <p style="color: #6c757d; margin: 10px 0;">支持单个或多个文件，最大 10GB</p>
+                    <p style="color: #6c757d; margin: 10px 0;">支持单个或多个文件，最大 1GB</p>
                     <input type="file" id="fileInput" multiple style="display: none;"
                         onchange="handleFileSelect(event)">
                     <button onclick="document.getElementById('fileInput').click()">选择文件</button>
